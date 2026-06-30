@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Community Hero AI Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body{
+            margin:0;
+            padding:30px;
+            font-family:Arial, sans-serif;
+            background:#f4f7fb;
+        }
+
+        .navbar{
+            background:linear-gradient(90deg,#0d6efd,#0047b3);
+            color:white;
+            padding:18px 30px;
+            border-radius:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:30px;
+        }
+
+        .navbar a{
+            color:white;
+            text-decoration:none;
+            margin-left:20px;
+        }
+
+        .stats{
+            display:flex;
+            gap:20px;
+            flex-wrap:wrap;
+            margin-bottom:25px;
+        }
+
+        .box{
+            flex:1;
+            min-width:180px;
+            color:white;
+            padding:20px;
+            border-radius:12px;
+        }
+
+        .green{background:#28a745;}
+        .blue{background:#0d6efd;}
+        .orange{background:#fd7e14;}
+        .red{background:#dc3545;}
+
+        .toolbar{
+            display:flex;
+            gap:15px;
+            align-items:center;
+            flex-wrap:wrap;
+            margin-bottom:30px;
+        }
+
+        .btn{
+            background:#0d6efd;
+            color:white;
+            padding:12px 18px;
+            text-decoration:none;
+            border-radius:8px;
+        }
+
+        input,select{
+            padding:10px;
+            border-radius:8px;
+            border:1px solid #ccc;
+        }
+
+        button{
+            padding:10px 18px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+        }
+
+        .searchBtn{
+            background:#0d6efd;
+            color:white;
+        }
+
+        .filterBtn{
+            background:#28a745;
+            color:white;
+        }
+
+        .charts{
+            display:flex;
+            gap:30px;
+            flex-wrap:wrap;
+            margin-bottom:40px;
+        }
+
+        .chartBox{
+            background:white;
+            padding:20px;
+            border-radius:15px;
+            box-shadow:0 4px 12px rgba(0,0,0,.15);
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:15px;
+            box-shadow:0 4px 12px rgba(0,0,0,.15);
+            margin-bottom:25px;
+            transition:.3s;
+        }
+
+        .card:hover{
+            transform:translateY(-5px);
+        }
+
+        img{
+            width:250px;
+            border-radius:10px;
+            margin-top:15px;
+            cursor:pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="navbar">
+    <h2>🌍 Community Hero AI</h2>
+
+    <div>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/report">Report Issue</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="stats">
+
+<div class="box green">
+<h3>Total Reports</h3>
+<h2>{{ total_reports }}</h2>
+</div>
+
+<div class="box blue">
+<h3>Submitted</h3>
+<h2>{{ submitted }}</h2>
+</div>
+
+<div class="box orange">
+<h3>Resolved</h3>
+<h2>{{ resolved }}</h2>
+</div>
+
+<div class="box red">
+<h3>Highest Priority</h3>
+<h2>{{ highest_priority }}</h2>
+</div>
+
+</div>
+
+<div class="toolbar">
+
+<a href="/report" class="btn">+ Report New Issue</a>
+
+<form action="/dashboard" method="GET">
+
+<input
+type="text"
+name="search"
+placeholder="Search..."
+value="{{ request.args.get('search','') }}">
+
+<button class="searchBtn">Search</button>
+
+<select name="filter">
+<option value="">All Reports</option>
+<option value="Submitted">Submitted</option>
+<option value="Resolved">Resolved</option>
+<option value="Highest">Highest Priority</option>
+<option value="High">High Priority</option>
+<option value="Medium">Medium Priority</option>
+<option value="Low">Low Priority</option>
+</select>
+
+<button class="filterBtn">
+Filter
+</button>
+
+</form>
+
+</div>
+
+<div class="charts">
+
+<div class="chartBox">
+<canvas id="statusChart" width="350" height="350"></canvas>
+</div>
+
+<div class="chartBox">
+<canvas id="priorityChart" width="350" height="350"></canvas>
+</div>
+
+</div>
+
+<hr>
+{% for report in reports %}
+
+<div class="card">
+
+<h2>#{{ report[0] }} - {{ report[2] }}</h2>
+
+<p>
+<b>📍 Location:</b>
+<a href="https://www.google.com/maps/search/{{ report[3] }}"
+target="_blank"
+style="text-decoration:none;color:#0d6efd;">
+{{ report[3] }}
+</a>
+</p>
+
+<p><b>Description:</b> {{ report[4] }}</p>
+
+{% set ai = report[6] %}
+
+<p><b>🤖 AI Analysis</b></p>
+
+{% if "Accident" in ai %}
+<span style="background:#dc3545;color:white;padding:6px 12px;border-radius:20px;">🚨 Accident</span>
+
+{% elif "Garbage" in ai %}
+<span style="background:#28a745;color:white;padding:6px 12px;border-radius:20px;">🗑 Garbage</span>
+
+{% elif "Road Damage" in ai %}
+<span style="background:#fd7e14;color:white;padding:6px 12px;border-radius:20px;">🛣 Road Damage</span>
+
+{% elif "Water Leakage" in ai %}
+<span style="background:#0d6efd;color:white;padding:6px 12px;border-radius:20px;">💧 Water Leakage</span>
+
+{% elif "Street Light" in ai %}
+<span style="background:#6f42c1;color:white;padding:6px 12px;border-radius:20px;">💡 Street Light</span>
+
+{% endif %}
+
+<br><br>
+
+{% if "Highest" in ai %}
+<b style="color:red;">🔴 Highest Priority</b>
+
+{% elif "High" in ai %}
+<b style="color:red;">🔴 High Priority</b>
+
+{% elif "Medium" in ai %}
+<b style="color:orange;">🟠 Medium Priority</b>
+
+{% else %}
+<b style="color:green;">🟢 Low Priority</b>
+{% endif %}
+
+<p><b>Status:</b> {{ report[7] }}</p>
+
+<div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;">
+
+{% if report[7] == "Submitted" %}
+<form action="/resolve/{{ report[0] }}" method="POST">
+<button style="background:#28a745;color:white;">
+✅ Resolve
+</button>
+</form>
+{% else %}
+<span style="color:green;font-weight:bold;">✔ Already Resolved</span>
+{% endif %}
+
+<form action="/delete/{{ report[0] }}" method="POST"
+onsubmit="return confirm('Delete this report?');">
+
+<button style="background:#dc3545;color:white;">
+🗑 Delete
+</button>
+
+</form>
+
+</div>
+
+<a href="{{ url_for('uploaded_file', filename=report[5]) }}" target="_blank">
+<img src="{{ url_for('uploaded_file', filename=report[5]) }}">
+</a>
+
+</div>
+
+{% endfor %}
+
+<script>
+
+new Chart(document.getElementById("statusChart"),{
+type:"bar",
+data:{
+labels:["Submitted","Resolved"],
+datasets:[{
+label:"Reports",
+data:[{{ submitted }},{{ resolved }}]
+}]
+}
+});
+
+new Chart(document.getElementById("priorityChart"),{
+type:"pie",
+data:{
+labels:["Highest","High","Medium","Low"],
+datasets:[{
+data:[
+{{ highest_priority }},
+{{ high }},
+{{ medium }},
+{{ low }}
+]
+}]
+}
+});
+
+</script>
+
+</body>
+</html>
